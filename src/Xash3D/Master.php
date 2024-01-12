@@ -28,16 +28,6 @@ class Master
         }
     }
 
-    public function __destruct()
-    {
-        if ($this->_socket)
-        {
-            fclose(
-                $this->_socket
-            );
-        }
-    }
-
     public function getServersIPv6(
         int    $limit   = 100,
         string $region  = "\xFF",
