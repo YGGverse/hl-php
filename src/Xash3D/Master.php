@@ -19,10 +19,13 @@ class Master
             $port
         );
 
-        stream_set_timeout(
-            $this->_socket,
-            $timeout
-        );
+        if ($this->_socket)
+        {
+            stream_set_timeout(
+                $this->_socket,
+                $timeout
+            );
+        }
     }
 
     public function __destruct()
