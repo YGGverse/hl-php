@@ -1,2 +1,21 @@
 # hl-php
-PHP library for Half-Life API
+
+PHP 8 library for Half-Life API with native IPv6 / Yggdrasil support
+
+## Install
+
+`composer require yggverse/hl`
+
+## Usage
+
+### Xash3d
+
+#### Master
+
+```
+$master = new Yggverse\Hl\Xash3d\Master('hl.ygg', 27010);
+
+var_dump(
+  $master->getServersIPv6()
+);
+```

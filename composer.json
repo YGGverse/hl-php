@@ -1,0 +1,17 @@
+{
+    "name": "yggverse/hl",
+    "description": "PHP 8 library for Half-Life API with native IPv6 / Yggdrasil support ",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Yggverse\\Hl\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "YGGverse"
+        }
+    ],
+    "require": {}
+}
