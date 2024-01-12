@@ -40,6 +40,13 @@ class Master
         }
     }
 
+    public function __destruct()
+    {
+        fclose(
+            $this->_socket
+        );
+    }
+
     public function getServersIPv6(
         int    $limit   = 100,
         string $region  = "\xFF",
@@ -59,10 +66,6 @@ class Master
         // Filter query
         if (false === fwrite($this->_socket, "1{$region}{$host}:{$port}\0\gamedir\t{$gamedir}\0"))
         {
-            fclose(
-                $this->_socket
-            );
-
             $this->_errors[] = _('Could not send socket query');
 
             return null;
@@ -71,10 +74,6 @@ class Master
         // Skip header
         if (false === fread($this->_socket, 6))
         {
-            fclose(
-                $this->_socket
-            );
-
             $this->_errors[] = _('Could not init packet header');
 
             return null;
@@ -140,11 +139,6 @@ class Master
                 'port' => $port
             ];
         }
-
-        // Close connection
-        fclose(
-            $this->_socket
-        );
 
         return $servers;
     }
