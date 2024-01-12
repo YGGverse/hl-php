@@ -23,3 +23,7 @@ var_dump(
     $master->getErrors()
 );
 ```
+
+## Projects
+
+* [HLState](https://github.com/YGGverse/HLState) - Web Monitor for Half-Life Servers
