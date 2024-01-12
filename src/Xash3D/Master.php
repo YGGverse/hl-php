@@ -38,7 +38,7 @@ class Master
         }
     }
 
-    public static function getServersIPv6(
+    public function getServersIPv6(
         int    $limit   = 100,
         string $region  = "\xFF",
         string $host    = "0.0.0.0:0",
