@@ -49,7 +49,7 @@ class Master
     ): ?array
     {
         // Is connected
-        if (!is_resource($this->_socket))
+        if (false === is_resource($this->_socket))
         {
             $this->_errors[] = _('Socket connection error');
 
@@ -57,7 +57,7 @@ class Master
         }
 
         // Filter query
-        if (!fwrite($this->_socket, "1{$region}{$host}:{$port}\0\gamedir\t{$gamedir}\0"))
+        if (false === fwrite($this->_socket, "1{$region}{$host}:{$port}\0\gamedir\t{$gamedir}\0"))
         {
             fclose(
                 $this->_socket
@@ -69,7 +69,7 @@ class Master
         }
 
         // Skip header
-        if (!fread($this->_socket, 6))
+        if (false === fread($this->_socket, 6))
         {
             fclose(
                 $this->_socket
