@@ -88,13 +88,7 @@ class Master
             // Get host
             if (false === $host = fread($this->_socket, 16))
             {
-                fclose(
-                    $this->_socket
-                );
-
-                $this->_errors[] = _('Could not read server address');
-
-                return null;
+                break;
             }
 
             // Is end of packet
@@ -103,34 +97,28 @@ class Master
                 break;
             }
 
-            // Skip invalid host
+            // Skip invalid host value
             if (false === $host = inet_ntop($host))
             {
+                // Shift port bytes
+                fread($this->_socket, 2);
+
                 continue;
             }
 
             // Decode first byte for port
             if (false === $byte1 = fread($this->_socket, 1))
             {
-                fclose(
-                    $this->_socket
-                );
+                // Shift port byte
+                fread($this->_socket, 1);
 
-                $this->_errors[] = _('Could not read first byte of port');
-
-                return null;
+                continue;
             }
 
             // Decode second byte for port
             if (false === $byte2 = fread($this->_socket, 1))
             {
-                fclose(
-                    $this->_socket
-                );
-
-                $this->_errors[] = _('Could not read second byte of port');
-
-                return null;
+                continue;
             }
 
             // Calculate port value
