@@ -88,7 +88,7 @@ class Master
             }
 
             // Is end of packet
-            if (true === str_starts_with($host, 0))
+            if (true === str_starts_with($host, (string) 0))
             {
                 break;
             }
