@@ -42,9 +42,12 @@ class Master
 
     public function __destruct()
     {
-        fclose(
-            $this->_socket
-        );
+        if (true === is_resource($this->_socket))
+        {
+            fclose(
+                $this->_socket
+            );
+        }
     }
 
     public function getServersIPv6(
