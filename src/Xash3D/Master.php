@@ -19,7 +19,7 @@ class Master
             $port
         );
 
-        if ($this->_socket)
+        if (is_resource($this->_socket))
         {
             stream_set_timeout(
                 $this->_socket,
@@ -37,7 +37,7 @@ class Master
     ): ?array
     {
         // Is connected
-        if (!$this->_socket)
+        if (!is_resource($this->_socket))
         {
             return null;
         }
