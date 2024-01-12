@@ -1,6 +1,8 @@
 {
     "name": "yggverse/hl",
     "description": "PHP 8 library for Half-Life API with native IPv6 / Yggdrasil support ",
+    "keywords": [ "half-life", "hl", "xash3d", "ipv6", "yggdrasil", "master" ],
+    "homepage": "https://github.com/YGGverse/hl-php",
     "type": "library",
     "license": "MIT",
     "autoload": {
