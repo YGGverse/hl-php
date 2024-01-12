@@ -65,6 +65,10 @@ class Master
         // Skip header
         if (!fread($this->_socket, 6))
         {
+            fclose(
+                $this->_socket
+            );
+
             return null;
         }
 
@@ -76,6 +80,10 @@ class Master
             // Get host
             if (false === $host = fread($this->_socket, 16))
             {
+                fclose(
+                    $this->_socket
+                );
+
                 return null;
             }
 
@@ -94,12 +102,20 @@ class Master
             // Decode first byte for port
             if (false === $byte1 = fread($this->_socket, 1))
             {
+                fclose(
+                    $this->_socket
+                );
+
                 return null;
             }
 
             // Decode second byte for port
             if (false === $byte2 = fread($this->_socket, 1))
             {
+                fclose(
+                    $this->_socket
+                );
+
                 return null;
             }
 
@@ -122,6 +138,11 @@ class Master
                 'port' => $port
             ];
         }
+
+        // Close connection
+        fclose(
+            $this->_socket
+        );
 
         return $servers;
     }
