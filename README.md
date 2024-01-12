@@ -18,4 +18,8 @@ $master = new \Yggverse\Hl\Xash3D\Master('hl.ygg', 27010);
 var_dump(
   $master->getServersIPv6()
 );
+
+var_dump(
+    $master->getErrors()
+);
 ```

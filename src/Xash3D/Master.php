@@ -7,6 +7,7 @@ namespace Yggverse\Hl\Xash3D;
 class Master
 {
     private $_socket;
+    private $_errors = [];
 
     public function __construct(
         string $host,
@@ -16,7 +17,10 @@ class Master
     {
         $this->_socket = fsockopen(
             "udp://{$host}",
-            $port
+            $port,
+            $code,
+            $message,
+            $timeout
         );
 
         if (is_resource($this->_socket))
@@ -24,6 +28,14 @@ class Master
             stream_set_timeout(
                 $this->_socket,
                 $timeout
+            );
+        }
+
+        else
+        {
+            $this->_errors[] = sprintf(
+                _('Connection error: %s'),
+                $message
             );
         }
     }
@@ -39,6 +51,8 @@ class Master
         // Is connected
         if (!is_resource($this->_socket))
         {
+            $this->_errors[] = _('Socket connection error');
+
             return null;
         }
 
@@ -49,6 +63,8 @@ class Master
                 $this->_socket
             );
 
+            $this->_errors[] = _('Could not send socket query');
+
             return null;
         }
 
@@ -58,6 +74,8 @@ class Master
             fclose(
                 $this->_socket
             );
+
+            $this->_errors[] = _('Could not init packet header');
 
             return null;
         }
@@ -73,6 +91,8 @@ class Master
                 fclose(
                     $this->_socket
                 );
+
+                $this->_errors[] = _('Could not read server address');
 
                 return null;
             }
@@ -96,6 +116,8 @@ class Master
                     $this->_socket
                 );
 
+                $this->_errors[] = _('Could not read first byte of port');
+
                 return null;
             }
 
@@ -105,6 +127,8 @@ class Master
                 fclose(
                     $this->_socket
                 );
+
+                $this->_errors[] = _('Could not read second byte of port');
 
                 return null;
             }
@@ -135,5 +159,10 @@ class Master
         );
 
         return $servers;
+    }
+
+    public function getErrors(): array
+    {
+        return $this->_errors;
     }
 }
