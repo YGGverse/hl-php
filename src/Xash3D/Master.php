@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Yggverse\Hl\Xash3d;
+namespace Yggverse\Hl\Xash3D;
 
 class Master
 {
