@@ -94,7 +94,7 @@ class Master
             }
 
             // Is end of packet
-            if (true === str_starts_with($host, (string) 0))
+            if (true === str_ends_with(bin2hex($host), bin2hex("\0\0\0\0\0\0")))
             {
                 break;
             }
