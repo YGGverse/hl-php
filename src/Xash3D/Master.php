@@ -6,8 +6,11 @@ namespace Yggverse\Hl\Xash3D;
 
 class Master
 {
-    private $_socket;
-    private $_errors = [];
+    private string $_host;
+    private int    $_port;
+    private int    $_timeout;
+
+    private array  $_errors = [];
 
     public function __construct(
         string $host,
@@ -15,37 +18,19 @@ class Master
         int    $timeout = 5
     )
     {
-        $this->_socket = fsockopen(
-            "udp://{$host}",
-            $port,
-            $code,
-            $message,
-            $timeout
-        );
-
-        if (is_resource($this->_socket))
-        {
-            stream_set_timeout(
-                $this->_socket,
-                $timeout
-            );
-        }
-
-        else
-        {
-            $this->_errors[] = sprintf(
-                _('Connection error: %s'),
-                $message
-            );
-        }
+        $this->_host    = $host;
+        $this->_port    = $port;
+        $this->_timeout = $timeout;
     }
 
-    public function __destruct()
+    private function _fclose(
+        mixed $socket
+    )
     {
-        if (true === is_resource($this->_socket))
+        if (true === is_resource($socket))
         {
             fclose(
-                $this->_socket
+                $socket
             );
         }
     }
@@ -58,26 +43,58 @@ class Master
         string $gamedir = "valve"
     ): ?array
     {
+        // Init connection
+        $socket = fsockopen(
+            "udp://{$this->_host}",
+            $this->_port,
+            $code,
+            $message,
+            $this->_timeout
+        );
+
         // Is connected
-        if (false === is_resource($this->_socket))
+        if (true === is_resource($socket))
         {
-            $this->_errors[] = _('Socket connection error');
+            stream_set_timeout(
+                $socket,
+                $this->_timeout
+            );
+        }
+
+        else
+        {
+            $this->_errors[] = sprintf(
+                _('Connection error: %s'),
+                $message
+            );
+
+            $this->_fclose(
+                $socket
+            );
 
             return null;
         }
 
         // Filter query
-        if (false === fwrite($this->_socket, "1{$region}{$host}:{$port}\0\gamedir\t{$gamedir}\0"))
+        if (false === fwrite($socket, "1{$region}{$host}:{$port}\0\gamedir\t{$gamedir}\0"))
         {
             $this->_errors[] = _('Could not send socket query');
+
+            $this->_fclose(
+                $socket
+            );
 
             return null;
         }
 
         // Skip header
-        if (false === fread($this->_socket, 6))
+        if (false === fread($socket, 6))
         {
             $this->_errors[] = _('Could not init packet header');
+
+            $this->_fclose(
+                $socket
+            );
 
             return null;
         }
@@ -88,7 +105,7 @@ class Master
         for ($i = 0; $i < $limit; $i++)
         {
             // Get host
-            if (false === $host = fread($this->_socket, 16))
+            if (false === $host = fread($socket, 16))
             {
                 break;
             }
@@ -103,22 +120,22 @@ class Master
             if (false === $host = inet_ntop($host))
             {
                 // Shift port bytes
-                fread($this->_socket, 2);
+                fread($socket, 2);
 
                 continue;
             }
 
-            // Decode first byte for port
-            if (false === $byte1 = fread($this->_socket, 1))
+            // Decode first byte of port
+            if (false === $byte1 = fread($socket, 1))
             {
                 // Shift port byte
-                fread($this->_socket, 1);
+                fread($socket, 1);
 
                 continue;
             }
 
-            // Decode second byte for port
-            if (false === $byte2 = fread($this->_socket, 1))
+            // Decode second byte of port
+            if (false === $byte2 = fread($socket, 1))
             {
                 continue;
             }
@@ -142,6 +159,10 @@ class Master
                 'port' => $port
             ];
         }
+
+        $this->_fclose(
+            $socket
+        );
 
         return $servers;
     }
