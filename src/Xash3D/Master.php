@@ -35,10 +35,10 @@ class Master
         }
     }
 
-    public function getServersIPv6(
+    public function getServers(
         int    $limit   = 100,
         string $region  = "\xFF",
-        string $host    = "0.0.0.0:0",
+        string $host    = "0.0.0.0",
         int    $port    = 0,
         string $gamedir = "valve"
     ): ?array
@@ -76,7 +76,7 @@ class Master
         }
 
         // Filter query
-        if (false === fwrite($socket, "1{$region}{$host}:{$port}\0\gamedir\t{$gamedir}\0"))
+        if (false === fwrite($socket, fwrite($socket, "1{$region}{$host}:{$port}\0\\gamedir\\{$gamedir}\0")))
         {
             $this->_errors[] = _('Could not send socket query');
 
