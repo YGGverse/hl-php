@@ -37,10 +37,10 @@ class Master
 
     public function getServers(
         int    $limit   = 100,
-        string $region  = "\xFF",
         string $host    = "0.0.0.0",
         int    $port    = 0,
-        string $gamedir = "valve"
+        string $gamedir = "valve",
+        string $region  = "\xFF"
     ): ?array
     {
         // Init connection
