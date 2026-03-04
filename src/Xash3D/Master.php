@@ -76,7 +76,7 @@ class Master
         }
 
         // Filter query
-        if (false === fwrite($socket, fwrite($socket, "1{$region}{$host}:{$port}\0\\gamedir\\{$gamedir}\0")))
+        if (false === fwrite($socket, "1{$region}{$host}:{$port}\0\\gamedir\\{$gamedir}\0"))
         {
             $this->_errors[] = _('Could not send socket query');
 
