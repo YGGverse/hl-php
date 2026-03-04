@@ -4,6 +4,21 @@ declare(strict_types=1);
 
 namespace Yggverse\Hl\Xash3D;
 
+enum Family: int {
+    case IPv4 = 4;
+    case IPv6 = 16;
+}
+
+enum Region: string {
+    case Europe  = "\x03";
+    case US_East = "\x00";
+    case World   = "\xFF";
+}
+
+enum Game: string {
+    case Valve = "valve";
+}
+
 class Master
 {
     private string $_host;
@@ -14,7 +29,7 @@ class Master
 
     public function __construct(
         string $host,
-        int    $port,
+        int    $port    = 27010,
         int    $timeout = 5
     )
     {
@@ -37,14 +52,16 @@ class Master
 
     // Legacy protocol implementation does not support mixed address families
     // in the binary master socket response, use separated method for IPv4 servers.
-    public function getServersIPv6(
+    public function getServers(
         int    $limit   = 100,
-        string $host    = "[::]",
+        string $host    = "0.0.0.0",
         int    $port    = 0,
-        string $gamedir = "valve",
-        string $region  = "\xFF"
+        Game   $game    = Game::Valve,
+        Region $region  = Region::World
     ): ?array
     {
+        $family = filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) ? Family::IPv4 : Family::IPv6;
+
         // Init connection
         $socket = fsockopen(
             "udp://{$this->_host}",
@@ -80,7 +97,7 @@ class Master
         }
 
         // Filter query
-        if (false === fwrite($socket, "1{$region}{$host}:{$port}\0\\gamedir\\{$gamedir}\0"))
+        if (false === fwrite($socket, "1{$region->value}{$host}:{$port}\0\\gamedir\\{$game->value}\0"))
         {
             $this->_errors[] = _("Could not send socket query for $master");
 
@@ -109,20 +126,20 @@ class Master
         for ($i = 0; $i < $limit; $i++)
         {
             // Get host bytes
-            if (false === $h = fread($socket, 16))
+            if (false === $host = fread($socket, $family->value))
             {
                 $this->_errors[] = _("Invalid `host` fragment in packet at $i for $master");
                 break;
             }
 
             // End of packet
-            if (true === str_ends_with(bin2hex($h), bin2hex("\0\0\0\0\0\0")))
+            if (true === str_ends_with(bin2hex($host), bin2hex("\0\0\0\0\0\0")))
             {
                 break;
             }
 
             // Get host string
-            if (false === $h = inet_ntop($h))
+            if (false === $host = inet_ntop($host))
             {
                 $this->_errors[] = _("Invalid `host` value in packet at $i for $master");
                 break;
@@ -143,15 +160,16 @@ class Master
             }
 
             // Validate result
-            if (false === filter_var($h, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6) || empty($p['port']))
+            if (false === filter_var($host, FILTER_VALIDATE_IP, $family == Family::IPv6 ? FILTER_FLAG_IPV6
+                                                                                        : FILTER_FLAG_IPV4) || empty($p['port']))
             {
                 $this->_errors[] = _("Invalid socket address in packet at $i for $master");
                 continue;
             }
 
-            $servers["{$h}{$p['port']}"] = // keep unique
+            $servers["{$host}{$p['port']}"] = // keep unique
             [
-                'host' => $h,
+                'host' => $host,
                 'port' => $p['port']
             ];
         }
