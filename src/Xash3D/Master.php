@@ -125,29 +125,14 @@ class Master
                 continue;
             }
 
-            // Decode first byte of port
-            if (false === $byte1 = fread($socket, 1))
-            {
-                // Shift port byte
-                fread($socket, 1);
-
-                continue;
-            }
-
-            // Decode second byte of port
-            if (false === $byte2 = fread($socket, 1))
-            {
-                continue;
-            }
-
             // Calculate port value
-            $port = ord($byte1) * 256 + ord($byte2);
+            $port = unpack('nport', fread($socket, 2));
 
             // Validate IPv6 result
             if (
                 false !== strpos($host, '.') || // filter_var not always works with mixed IPv6
                 false === filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6) ||
-                false === filter_var($port, FILTER_VALIDATE_INT)
+                false === filter_var($port, FILTER_VALIDATE_INT) // @TODO
             )
             {
                 continue;
