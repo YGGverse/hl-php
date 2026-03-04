@@ -35,9 +35,11 @@ class Master
         }
     }
 
-    public function getServers(
+    // Legacy protocol implementation does not support mixed address families
+    // in the binary master socket response, use separated method for IPv4 servers.
+    public function getServersIPv6(
         int    $limit   = 100,
-        string $host    = "0.0.0.0",
+        string $host    = "[::]",
         int    $port    = 0,
         string $gamedir = "valve",
         string $region  = "\xFF"
@@ -52,6 +54,8 @@ class Master
             $this->_timeout
         );
 
+        $master = "{$this->_host}:{$this->_port}";
+
         // Is connected
         if (true === is_resource($socket))
         {
@@ -64,7 +68,7 @@ class Master
         else
         {
             $this->_errors[] = sprintf(
-                _('Connection error: %s'),
+                _("Connection error for $master: %s"),
                 $message
             );
 
@@ -78,7 +82,7 @@ class Master
         // Filter query
         if (false === fwrite($socket, "1{$region}{$host}:{$port}\0\\gamedir\\{$gamedir}\0"))
         {
-            $this->_errors[] = _('Could not send socket query');
+            $this->_errors[] = _("Could not send socket query for $master");
 
             $this->_fclose(
                 $socket
@@ -90,7 +94,7 @@ class Master
         // Skip header
         if (false === fread($socket, 6))
         {
-            $this->_errors[] = _('Could not init packet header');
+            $this->_errors[] = _("Could not init packet header for $master");
 
             $this->_fclose(
                 $socket
@@ -104,49 +108,51 @@ class Master
 
         for ($i = 0; $i < $limit; $i++)
         {
-            // Get host
-            if (false === $host = fread($socket, 16))
+            // Get host bytes
+            if (false === $h = fread($socket, 16))
+            {
+                $this->_errors[] = _("Invalid `host` fragment in packet at $i for $master");
+                break;
+            }
+
+            // End of packet
+            if (true === str_ends_with(bin2hex($h), bin2hex("\0\0\0\0\0\0")))
             {
                 break;
             }
 
-            // Is end of packet
-            if (true === str_ends_with(bin2hex($host), bin2hex("\0\0\0\0\0\0")))
+            // Get host string
+            if (false === $h = inet_ntop($h))
             {
+                $this->_errors[] = _("Invalid `host` value in packet at $i for $master");
                 break;
             }
 
-            // Skip invalid host value
-            if (false === $host = inet_ntop($host))
+            // Get port bytes
+            if (false === $p = fread($socket, 2))
             {
-                // Shift port bytes
-                fread($socket, 2);
+                $this->_errors[] = _("Invalid `port` fragment in packet at $i for $master");
+                break;
+            }
 
+            // Get port value
+            if (false === $p = unpack('nport', $p))
+            {
+                $this->_errors[] = _("Invalid `port` value in packet at $i for $master");
                 continue;
             }
 
-            // Calculate port value
-            if (false === $port = fread($socket, 2))
+            // Validate result
+            if (false === filter_var($h, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6) || empty($p['port']))
             {
+                $this->_errors[] = _("Invalid socket address in packet at $i for $master");
                 continue;
             }
 
-            if (false === $port = unpack('nport', $port))
-            {
-                continue;
-            }
-
-            // Validate IPv6 result
-            if ((false === filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6) &&
-                 false === filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) || empty($port['port']))
-            {
-                continue;
-            }
-
-            $servers["[{$host}]:{$port['port']}"] = // keep unique
+            $servers["{$h}{$p['port']}"] = // keep unique
             [
-                'host' => $host,
-                'port' => $port['port']
+                'host' => $h,
+                'port' => $p['port']
             ];
         }
 
