@@ -156,7 +156,7 @@ class Master
             if (false === $p = unpack('nport', $p))
             {
                 $this->_errors[] = _("Invalid `port` value in packet at $i for $master");
-                continue;
+                break;
             }
 
             // Validate result
@@ -164,7 +164,7 @@ class Master
                                                                                         : FILTER_FLAG_IPV4) || empty($p['port']))
             {
                 $this->_errors[] = _("Invalid socket address in packet at $i for $master");
-                continue;
+                break;
             }
 
             $servers["{$host}{$p['port']}"] = // keep unique
