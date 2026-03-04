@@ -107,13 +107,13 @@ class Master
             // Get host
             if (false === $host = fread($socket, 16))
             {
-                continue;
+                break;
             }
 
             // Is end of packet
             if (true === str_ends_with(bin2hex($host), bin2hex("\0\0\0\0\0\0")))
             {
-                continue;
+                break;
             }
 
             // Skip invalid host value
@@ -126,22 +126,27 @@ class Master
             }
 
             // Calculate port value
-            $port = unpack('nport', fread($socket, 2));
-
-            // Validate IPv6 result
-            if (
-                false !== strpos($host, '.') || // filter_var not always works with mixed IPv6
-                false === filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6) ||
-                false === filter_var($port, FILTER_VALIDATE_INT) // @TODO
-            )
+            if (false === $port = fread($socket, 2))
             {
                 continue;
             }
 
-            $servers["[{$host}]:{$port}"] = // keep unique
+            if (false === $port = unpack('nport', $port))
+            {
+                continue;
+            }
+
+            // Validate IPv6 result
+            if ((false === filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6) &&
+                 false === filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) || empty($port['port']))
+            {
+                continue;
+            }
+
+            $servers["[{$host}]:{$port['port']}"] = // keep unique
             [
                 'host' => $host,
-                'port' => $port
+                'port' => $port['port']
             ];
         }
 
