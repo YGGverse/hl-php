@@ -107,13 +107,13 @@ class Master
             // Get host
             if (false === $host = fread($socket, 16))
             {
-                break;
+                continue;
             }
 
             // Is end of packet
             if (true === str_ends_with(bin2hex($host), bin2hex("\0\0\0\0\0\0")))
             {
-                break;
+                continue;
             }
 
             // Skip invalid host value
