@@ -10,9 +10,15 @@ enum Family: int {
 }
 
 enum Region: string {
-    case Europe  = "\x03";
-    case US_East = "\x00";
-    case World   = "\xFF";
+    case USEastCoast  = "0x00";
+    case USWestCoast  = "0x01";
+    case SouthAmerica = "0x02";
+    case Europe       = "0x03";
+    case Asia         = "0x04";
+    case Australia    = "0x05";
+    case MiddleEast   = "0x06";
+    case Africa       = "0x07";
+    case World        = "0xff";
 }
 
 enum Game: string {
